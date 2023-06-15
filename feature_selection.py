@@ -48,9 +48,6 @@ class FeatureSelection:
 
     def forward_selection(self):
 
-        if flag:
-            threshold = 0.96    # Set threshold as you wish (For XXXLarge dataset)
-
         current_features = set()
         feature_performances = {}
         accuracies = set()
@@ -62,7 +59,7 @@ class FeatureSelection:
             print("\nThis dataset has {} features (not including the class attribute), with {} random instances".format(num_cols - 1, num_instances))
         else:
             print("\nThis dataset has {} features (not including the class attribute), with {} instances".format(num_cols - 1, num_instances))
-        print("\nRunning nearest neighbor with all {} features, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(num_cols - 1, self.cross_validation(self.data, set(range(num_cols - 1)), num_cols - 1) * 100))
+        print("\nRunning nearest neighbor with all {{}} features selected, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(self.cross_validation(self.data, set(), 0) * 100))
         print("\nBeginning search")
 
         for i in range(num_cols - 1):
@@ -82,12 +79,6 @@ class FeatureSelection:
                         feature_to_add = j + 1
 
                     accuracies.add(round(best_accuracy, 3))
-
-                    if flag and best_accuracy > threshold:
-                        print('Terminating search as accuracy surpasses threshold!!')
-                        print('Finished search!! The best feature subset is {}, which has an accuracy of {}%'.format(
-                            selected_features.union({j+1}), round(best_accuracy * 100, 1)))
-                        exit()
 
             if best_accuracy < highest_accuracy:
                 print('\n(Warning, Accuracy has decreased! Continuing search in case of local maxima)')
@@ -190,7 +181,7 @@ class FeatureSelection:
             np.random.seed(42)  # Set the random seed for reproducibility
             self.data = self.data.to_numpy()
             np.random.shuffle(self.data)
-            random_rows = np.random.choice(np.arange(self.data.shape[0]), size=500, replace=False)
+            random_rows = np.random.choice(np.arange(self.data.shape[0]), size=100, replace=False) # Set the instance size
             self.data = self.data[random_rows, :]
             global flag
             flag = True
