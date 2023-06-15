@@ -161,14 +161,16 @@ class FeatureSelection:
                 print()
 
         if num_cols > 2:
-            last_feature_set = feature_performances[max(accuracies)]
             last_accuracy = max(accuracies)
-            if last_feature_set:
+            last_feature_set = feature_performances.get(round(last_accuracy, 3))
+
+            if last_feature_set is not None:
                 print('Feature set {} was best, accuracy is {}%'.format(last_feature_set, round(last_accuracy * 100, 1)))
                 print()
 
         print('Finished search!! The best feature subset is {}, which has an accuracy of {}%'.format(
-            feature_performances[max(accuracies)], round(max(accuracies) * 100, 1)))
+            feature_performances.get(round(max(accuracies), 3)), round(max(accuracies) * 100, 1)))
+
 
         return accuracies, feature_performances
 
