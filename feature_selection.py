@@ -14,7 +14,7 @@ class FeatureSelection:
             if i not in cur_features and i != feat_to_add:
                 data[:, i] = 0
             i += 1
-            
+
         num_correct, num_rows = 0, data.shape[0]
         i = 0
         while i < num_rows:
@@ -92,8 +92,67 @@ class FeatureSelection:
 
         return accuracies, feature_performances
     
+
     def backward_elimination(self):
-        pass
+        current_features = set(range(1, self.data.shape[1]))
+
+        feature_performances = {}
+        accuracies = set()
+        highest_accuracy = 0
+
+        num_cols = self.data.shape[1]
+        num_instances = self.data.shape[0]
+
+        print("\nThis dataset has {} features (not including the class attribute), with {} instances".format(num_cols - 1, num_instances))
+        print("\nRunning nearest neighbor with all {} features, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(num_cols - 1, self.cross_validation(self.data, current_features, 0) * 100))
+        print("\nBeginning search")
+
+        for i in range(num_cols - 1):
+            feature_to_remove = None
+            best_accuracy = 0
+            selected_features = current_features.copy()
+
+            print('Evaluating level {} of the search tree'.format(i + 1))
+
+            for j in range(num_cols - 1):
+                if j + 1 in current_features:
+                    sub_features = current_features.copy()
+                    sub_features.remove(j + 1)
+                    accuracy = self.cross_validation(self.data, sub_features, 0)
+
+                    if accuracy > best_accuracy:
+                        best_accuracy = accuracy
+                        feature_to_remove = j + 1
+
+                    accuracies.add(best_accuracy)
+                    print('\tUsing feature(s) {} accuracy is {}%'.format(selected_features - {j + 1}, round(accuracy * 100, 1)))
+
+            if best_accuracy < highest_accuracy:
+                print('\n(Warning, Accuracy has decreased! Continuing search in case of local maxima)')
+
+            highest_accuracy = max(highest_accuracy, best_accuracy)
+
+            current_features.remove(feature_to_remove)
+            rounded_accuracy = round(best_accuracy, 3)
+            if rounded_accuracy not in feature_performances.keys():
+                feature_performances[rounded_accuracy] = current_features.copy()
+
+            print('Feature {} removed on level {}'.format(feature_to_remove, i + 1))
+            if i < num_cols - 2:
+                print('Feature set {} was best, accuracy is {}%'.format(selected_features - {feature_to_remove}, round(best_accuracy * 100, 1)))
+                print()
+
+        if num_cols > 2:
+            last_feature_set = feature_performances[max(accuracies)]
+            last_accuracy = max(accuracies)
+            if last_feature_set:
+                print('Feature set {} was best, accuracy is {}%'.format(last_feature_set, round(last_accuracy * 100, 1)))
+                print()
+
+        print('Finished search!! The best feature subset is {}, which has an accuracy of {}%'.format(
+            feature_performances[max(accuracies)], round(max(accuracies) * 100, 1)))
+
+        return accuracies, feature_performances
 
 
     def run_feature_selection(self):
