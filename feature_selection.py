@@ -10,8 +10,10 @@ class FeatureSelection:
 
 
     def cross_validation(self, complete_data, cur_features, feat_to_add):
+        # Perform cross-validation by leaving one instance out and evaluating accuracy
         data = np.copy(complete_data)
 
+        # Set non-selected features (except the one to add) to zero
         i = 1
         while i < complete_data.shape[1]:
             if i not in cur_features and i != feat_to_add:
@@ -24,6 +26,7 @@ class FeatureSelection:
             objs_to_classify = data[i, 1:]
             label = data[i, 0]
 
+            # Find the nearest neighbor
             nn_loc = float('inf')
             nn_dist = float('inf')
             nn_lbl = 0.0
@@ -31,12 +34,13 @@ class FeatureSelection:
             j = 0
             while j < num_rows:
                 if i != j:
-                    dist = np.sqrt(np.sum(np.square(objs_to_classify - data[j, 1:])))
+                    dist = np.sqrt(np.sum(np.square(objs_to_classify - data[j, 1:]))) # Calculating Euclidean Distance
                     if dist <= nn_dist:
                         nn_dist, nn_loc = dist, j
                         nn_lbl = data[nn_loc, 0]
                 j += 1
 
+            # Check if the label of the nearest neighbor matches the actual label
             if label == nn_lbl:
                 num_correct += 1
             i += 1
@@ -47,7 +51,7 @@ class FeatureSelection:
 
 
     def forward_selection(self):
-
+        # Perform forward feature selection
         current_features = set()
         feature_performances = {}
         accuracies = set()
@@ -55,11 +59,12 @@ class FeatureSelection:
 
         num_cols = self.data.shape[1]
         num_instances = self.data.shape[0]
+        # Print dataset information
         if flag:
             print("\nThis dataset has {} features (not including the class attribute), with {} random instances".format(num_cols - 1, num_instances))
         else:
             print("\nThis dataset has {} features (not including the class attribute), with {} instances".format(num_cols - 1, num_instances))
-        print("\nRunning nearest neighbor with all {{}} features selected, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(self.cross_validation(self.data, set(), 0) * 100))
+        print("\nRunning nearest neighbor with all {{}} features, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(self.cross_validation(self.data, set(), 0) * 100))
         print("\nBeginning search")
 
         for i in range(num_cols - 1):
@@ -71,6 +76,7 @@ class FeatureSelection:
 
             for j in range(num_cols - 1):
                 if j + 1 not in current_features:
+                    # Evaluate the accuracy with the added feature
                     accuracy = self.cross_validation(self.data, current_features, j + 1)
                     print('\t Using feature(s) {} accuracy is {}%'.format(selected_features.union({j + 1}), round(accuracy * 100, 1)))
 
@@ -103,7 +109,7 @@ class FeatureSelection:
 
 
     def backward_elimination(self):
-
+        # Perform Backward elimination
         current_features = set(range(1, self.data.shape[1]))
         feature_performances = {}
         accuracies = set()
@@ -112,6 +118,7 @@ class FeatureSelection:
         num_cols = self.data.shape[1]
         num_instances = self.data.shape[0]
 
+        # Print dataset information
         print("\nThis dataset has {} features (not including the class attribute), with {} instances".format(num_cols - 1, num_instances))
         print("\nRunning nearest neighbor with all {} features, using 'leaving-one-out' evaluation, I get an accuracy of {:.1f}%\n".format(num_cols - 1, self.cross_validation(self.data, current_features, 0) * 100))
         print("\nBeginning search")
@@ -127,6 +134,7 @@ class FeatureSelection:
                 if j + 1 in current_features:
                     sub_features = current_features.copy()
                     sub_features.remove(j + 1)
+                    # Evaluate the accuracy with the feature removed
                     accuracy = self.cross_validation(self.data, sub_features, 0)
 
                     if accuracy > best_accuracy:
@@ -167,6 +175,7 @@ class FeatureSelection:
 
 
     def run_feature_selection(self):
+        # Prompt the user to choose between forward selection and backward elimination
         print('Type the number of the algorithm you want to run: \n')
         user_input = int(input("1. Forward Selection\n2. Backward Elimination\nEnter 1 or 2: "))
 
@@ -176,6 +185,7 @@ class FeatureSelection:
             self.backward_elimination()
 
     def main(self):
+        # Main function to run the feature selection algorithm
         start_time = time.time()
         if re.search('.*XXXlarge.*', dataset):    # If the filename has XXXlarge
             np.random.seed(42)  # Set the random seed for reproducibility
@@ -190,10 +200,10 @@ class FeatureSelection:
             self.run_feature_selection()
         end_time = time.time()
         time_elapsed = end_time - start_time
-        print("Time elapsed: ", round(time_elapsed, 3))
+        print("Time elapsed (in secs): ", round(time_elapsed, 3))
 
-global flag
-flag = False
+global flag     # Adding so that to perform sampling on XXXlarge files
+flag = False    # Initializing it to False
 dataset = input("Type in the name of the file to test: ")
 feature_selection = FeatureSelection(dataset)
 feature_selection.main()
